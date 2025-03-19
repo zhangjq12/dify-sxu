@@ -95,6 +95,56 @@ class LoginApi(Resource):
         token_pair = AccountService.login(account=account, ip_address=extract_remote_ip(request))
         AccountService.reset_login_error_rate_limit(args["email"])
         return {"result": "success", "data": token_pair.model_dump()}
+    
+class SignUpAndLoginApi(Resource):
+    """Resource for user sign up and then login."""
+
+    @setup_required
+    def post(self):
+        """Authenticate user and login."""
+        parser = reqparse.RequestParser()
+        parser.add_argument("email", type=email, required=True, location="json")
+        parser.add_argument("remember_me", type=bool, required=False, default=False, location="json")
+        args = parser.parse_args()
+
+        if dify_config.BILLING_ENABLED and BillingService.is_email_in_freeze(args["email"]):
+            raise AccountInFreezeError()
+
+        is_login_error_rate_limit = AccountService.is_login_error_rate_limit(args["email"])
+        if is_login_error_rate_limit:
+            raise EmailPasswordLoginLimitError()
+
+        try:
+            account = AccountService.authenticate(email=args["email"], password="abcd1234", isSignup=True)
+            print(account)
+            if account == None:
+                account = AccountService.create_account(email=args["email"], name=args["email"], interface_language="zh-CN", password="abcd1234", is_setup=True)
+                TenantService.create_owner_tenant_if_not_exist(account=account, name=f"{args["email"]}'s workspace", is_setup=True)
+                print(account)
+        except services.errors.account.AccountLoginError:
+            raise AccountBannedError()
+        except services.errors.account.AccountPasswordError:
+            AccountService.add_login_error_rate_limit(args["email"])
+            raise EmailOrPasswordMismatchError()
+        # except services.errors.account.AccountNotFoundError:
+            # if FeatureService.get_system_features().is_allow_register:
+            #     token = AccountService.send_reset_password_email(email=args["email"], language=language)
+            #     return {"result": "fail", "data": token, "code": "account_not_found"}
+            # else:
+            #     raise AccountNotFound()
+            # account = AccountService.create_account(email=args["email"], name=args["email"], interface_language="zh-Hans")
+        print(account)
+        # SELF_HOSTED only have one workspace
+        tenants = TenantService.get_join_tenants(account)
+        if len(tenants) == 0:
+            return {
+                "result": "fail",
+                "data": "workspace not found, please contact system admin to invite you to join in a workspace",
+            }
+
+        token_pair = AccountService.login(account=account, ip_address=extract_remote_ip(request))
+        AccountService.reset_login_error_rate_limit(args["email"])
+        return {"result": "success", "data": token_pair.model_dump()}
 
 
 class LogoutApi(Resource):
@@ -232,6 +282,7 @@ class RefreshTokenApi(Resource):
 
 
 api.add_resource(LoginApi, "/login")
+api.add_resource(SignUpAndLoginApi, '/signuplogin')
 api.add_resource(LogoutApi, "/logout")
 api.add_resource(EmailCodeLoginSendEmailApi, "/email-code-login")
 api.add_resource(EmailCodeLoginApi, "/email-code-login/validity")
