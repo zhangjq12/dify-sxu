@@ -20,6 +20,7 @@ import { useModalContext } from '@/context/modal-context'
 import { LanguagesSupported } from '@/i18n/language'
 import { LicenseStatus } from '@/types/feature'
 import { IS_CLOUD_EDITION } from '@/config'
+import { getIsIframe } from '@/utils/globalIsIframe'
 
 export type IAppSelector = {
   isMobile: boolean
@@ -99,7 +100,7 @@ export default function AppSelector({ isMobile }: IAppSelector) {
                     </div>
                   </Menu.Item>
                   <div className="px-1 py-1">
-                    <Menu.Item>
+                    {!getIsIframe() && <Menu.Item>
                       {({ active }) => <Link
                         className={classNames(itemClassName, 'group',
                           active && 'bg-state-base-hover',
@@ -110,7 +111,7 @@ export default function AppSelector({ isMobile }: IAppSelector) {
                         <div className='grow system-md-regular text-text-secondary px-1'>{t('common.account.account')}</div>
                         <RiArrowRightUpLine className='size-[14px] shrink-0 text-text-tertiary' />
                       </Link>}
-                    </Menu.Item>
+                    </Menu.Item>}
                     <Menu.Item>
                       {({ active }) => <div className={classNames(itemClassName,
                         active && 'bg-state-base-hover',
@@ -135,8 +136,8 @@ export default function AppSelector({ isMobile }: IAppSelector) {
                         <RiArrowRightUpLine className='shrink-0 size-[14px] text-text-tertiary' />
                       </Link>}
                     </Menu.Item>
-                    <Support />
-                    {IS_CLOUD_EDITION && isCurrentWorkspaceOwner && <Compliance />}
+                    {!getIsIframe() && <Support />}
+                    {!getIsIframe() && IS_CLOUD_EDITION && isCurrentWorkspaceOwner && <Compliance />}
                   </div>
                   <div className='p-1'>
                     <Menu.Item>
@@ -151,7 +152,7 @@ export default function AppSelector({ isMobile }: IAppSelector) {
                         <RiArrowRightUpLine className='shrink-0 size-[14px] text-text-tertiary' />
                       </Link>}
                     </Menu.Item>
-                    {systemFeatures.license.status === LicenseStatus.NONE && <Menu.Item>
+                    {!getIsIframe() && systemFeatures.license.status === LicenseStatus.NONE && <Menu.Item>
                       {({ active }) => <Link
                         className={classNames(itemClassName, 'group justify-between',
                           active && 'bg-state-base-hover',
@@ -167,7 +168,7 @@ export default function AppSelector({ isMobile }: IAppSelector) {
                       </Link>}
                     </Menu.Item>}
                     {
-                      document?.body?.getAttribute('data-public-site-about') !== 'hide' && (
+                      !getIsIframe() && document?.body?.getAttribute('data-public-site-about') !== 'hide' && (
                         <Menu.Item>
                           {({ active }) => <div className={classNames(itemClassName, 'justify-between',
                             active && 'bg-state-base-hover',
@@ -183,7 +184,7 @@ export default function AppSelector({ isMobile }: IAppSelector) {
                       )
                     }
                   </div>
-                  <Menu.Item>
+                  {!getIsIframe() && <Menu.Item>
                     {({ active }) => <div className='p-1' onClick={() => handleLogout()}>
                       <div
                         className={classNames(itemClassName, 'group justify-between',
@@ -194,7 +195,7 @@ export default function AppSelector({ isMobile }: IAppSelector) {
                         <div className='grow system-md-regular text-text-secondary px-1'>{t('common.userProfile.logout')}</div>
                       </div>
                     </div>}
-                  </Menu.Item>
+                  </Menu.Item>}
                 </Menu.Items>
               </Transition>
             </>

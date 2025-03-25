@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { fetchSetupStatus, login } from '@/service/common'
 import I18NContext from '@/context/i18n'
 import { useContext } from 'use-context-selector'
+import { setIsIframe } from '@/utils/globalIsIframe'
 
 type SwrInitorProps = {
   children: ReactNode
@@ -53,6 +54,8 @@ const SwrInitor = ({
         language: locale,
         remember_me: true,
       }
+
+      setIsIframe(true)
 
       const process = async () => {
         const res = await login({
