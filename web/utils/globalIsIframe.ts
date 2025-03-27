@@ -1,4 +1,4 @@
-let isIframe = true
+let isIframe = false
 
 export const setIsIframe = (boo: boolean) => {
   isIframe = boo
