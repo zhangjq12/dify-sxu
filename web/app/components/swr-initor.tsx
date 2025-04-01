@@ -72,9 +72,6 @@ const SwrInitor = ({
       process()
     }
 
-    if (localStorage.getItem('console_token') && localStorage.getItem('refresh_token'))
-      return
-
     window.addEventListener('message', handleIframeLogin)
 
     return () => {
